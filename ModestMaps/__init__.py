@@ -70,6 +70,7 @@ import StringIO
 import math
 import thread
 import time
+import traceback
 
 try:
     import PIL.Image
@@ -82,7 +83,7 @@ import Tiles
 import Providers
 import Core
 import Geo
-import Yahoo, Microsoft, BlueMarble, OpenStreetMap, CloudMade
+import Yahoo, Microsoft, BlueMarble, OpenStreetMap, CloudMade, WMS
 import time
 
 # a handy list of possible providers, which isn't
@@ -102,7 +103,8 @@ builtinProviders = {
     'CLOUDMADE_TOURIST': CloudMade.TouristProvider,
     'CLOUDMADE_FRESH':  CloudMade.FreshProvider,
     'CLOUDMADE_PALEDAWN': CloudMade.PaleDawnProvider,
-    'CLOUDMADE_MIDNIGHTCOMMANDER': CloudMade.MidnightCommanderProvider
+    'CLOUDMADE_MIDNIGHTCOMMANDER': CloudMade.MidnightCommanderProvider,
+    'WMS': WMS.Provider
     }
 
 def mapByCenterZoom(provider, center, zoom, dimensions):
@@ -228,6 +230,10 @@ class TileRequest:
             return
 
         urls = self.provider.getTileUrls(self.coord)
+
+        method = 'GET'
+        if not self.provider.getPostData() is None:
+            method = 'POST'
         
         if verbose:
             print 'Requesting', urls, '- attempt no.', attempt, 'in thread', hex(thread.get_ident())
@@ -238,11 +244,21 @@ class TileRequest:
         
             for (scheme, netloc, path, params, query, fragment) in map(urlparse.urlparse, urls):
                 conn = httplib.HTTPConnection(netloc)
-                conn.request('GET', path + ('?' + query).rstrip('?'), headers={'User-Agent': 'Modest Maps python branch (http://modestmaps.com)'})
-                response = conn.getresponse()
+
+                try:
+                    body = self.provider.getPostData()
+                    conn.request(method, path + ('?' + query).rstrip('?'), body=body, headers={'User-Agent': 'Modest Maps python branch (http://modestmaps.com)'})
+
+                    response = conn.getresponse()
                 
-                if str(response.status).startswith('2'):
-                    imgs.append(PIL.Image.open(StringIO.StringIO(response.read())).convert('RGBA'))
+                    if str(response.status).startswith('2'):
+                        imgs.append(PIL.Image.open(StringIO.StringIO(response.read())).convert('RGBA'))
+
+                except Exception:
+                    if verbose:
+                        print traceback.format_exc()
+                    else:
+                        print 'Exception during TileRequest.load()'
 
         except:
                 
@@ -474,7 +490,7 @@ class Map:
                 # hang around until they are loaded or we run out of time...
                 time.sleep(1)
 
-        mapImg = PIL.Image.new('RGB', (img_width, img_height))
+        mapImg = PIL.Image.new('RGBA', (img_width, img_height))
         
         for tile in tiles:
             try:
