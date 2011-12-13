@@ -23,8 +23,8 @@ class Provider(IMapProvider):
         'SERVICE': 'WMS',
         'REQUEST': 'GetMap',
         'SRS': 'EPSG:4326',
-        'WIDTH': '256',
-        'HEIGHT': '256'
+        'WIDTH': 256,
+        'HEIGHT': 256
     }
 
     def __init__(self, server, params=None):
@@ -49,9 +49,10 @@ class Provider(IMapProvider):
             self.projection = MercatorProjection(26, Transformation(1.068070779e7, 0, 3.355443185e7, 0, -1.068070890e7, 3.355443057e7))
 
     def getTileUrls(self, coord):
-        worldSize = math.pow(coord.zoom, 2);
-        if coord.row < 0 or coord.row >= worldSize:
-            return []
+        #worldSize = math.pow(coord.zoom, 2);
+        #if coord.row < 0 or coord.row > worldSize:
+        #    print 'WARNING: outside coordinates. Row:',coord.row,', WorldSize:',worldSize
+        #    return []
 
         sourceCoord = self.sourceCoordinate(coord)
         ll = sourceCoord.down()
@@ -79,10 +80,10 @@ class Provider(IMapProvider):
         return ['%s%s%s' % (self.server, self.wms, bbox)]
 
     def tileWidth(self):
-        return int(self.params['WIDTH'])
+        return self.params['WIDTH']
 
     def tileHeight(self):
-        return int(self.params['HEIGHT'])
+        return self.params['HEIGHT']
 
     def getPostData(self):
         return self.postData
