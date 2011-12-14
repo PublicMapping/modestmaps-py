@@ -49,11 +49,6 @@ class Provider(IMapProvider):
             self.projection = MercatorProjection(26, Transformation(1.068070779e7, 0, 3.355443185e7, 0, -1.068070890e7, 3.355443057e7))
 
     def getTileUrls(self, coord):
-        #worldSize = math.pow(coord.zoom, 2);
-        #if coord.row < 0 or coord.row > worldSize:
-        #    print 'WARNING: outside coordinates. Row:',coord.row,', WorldSize:',worldSize
-        #    return []
-
         sourceCoord = self.sourceCoordinate(coord)
         ll = sourceCoord.down()
         ur = sourceCoord.right()
