@@ -245,20 +245,13 @@ class TileRequest:
             for (scheme, netloc, path, params, query, fragment) in map(urlparse.urlparse, urls):
                 conn = httplib.HTTPConnection(netloc)
 
-                try:
-                    body = self.provider.getPostData()
-                    conn.request(method, path + ('?' + query).rstrip('?'), body=body, headers={'User-Agent': 'Modest Maps python branch (http://modestmaps.com)'})
+                body = self.provider.getPostData()
+                conn.request(method, path + ('?' + query).rstrip('?'), body=body, headers={'User-Agent': 'Modest Maps python branch (http://modestmaps.com)'})
 
-                    response = conn.getresponse()
+                response = conn.getresponse()
                 
-                    if str(response.status).startswith('2'):
-                        imgs.append(PIL.Image.open(StringIO.StringIO(response.read())).convert('RGBA'))
-
-                except Exception:
-                    if verbose:
-                        print traceback.format_exc()
-                    else:
-                        print 'Exception during TileRequest.load()'
+                if str(response.status).startswith('2'):
+                    imgs.append(PIL.Image.open(StringIO.StringIO(response.read())).convert('RGBA'))
 
         except:
                 
